@@ -2,41 +2,41 @@ const fs = require('fs');
 const pathModule = require('path');
 const babel = require('@babel/core');
 const readline = require('readline');
-const fileCache = {};
+const fileCache = { index: 1 };
 // 删除文件夹
-function rmdirp(dir){
-  if(!fs.existsSync(dir)){
+function rmdirp(dir) {
+  if (!fs.existsSync(dir)) {
     return;
   }
   let files = fs.readdirSync(dir);
-  files.forEach((file)=>{
-    let current = dir+'/'+file
+  files.forEach(file => {
+    let current = dir + '/' + file;
     let child = fs.statSync(current);
-    if(child.isDirectory()){
-      rmdirp(current)
-    }else{
+    if (child.isDirectory()) {
+      rmdirp(current);
+    } else {
       fs.unlinkSync(current);
     }
-  })
+  });
   fs.rmdirSync(dir);
 }
 // 创建文件夹
 function mkdirp(dir) {
   let paths = dir.split('/');
-  !function next(index) {
+  !(function next(index) {
     if (index > paths.length) return;
     let current = paths.slice(0, index).join('/');
-    fs.access(current, fs.constants.R_OK, (err) => {
+    fs.access(current, fs.constants.R_OK, err => {
       if (err) {
-        fs.mkdir(current, 0o666, next.bind(null, index + 1))
+        fs.mkdir(current, 0o666, next.bind(null, index + 1));
       } else {
         next(index + 1);
       }
-    })
-  }(1);
+    });
+  })(1);
 }
-rmdirp('code')
-mkdirp('code')
+rmdirp('code');
+mkdirp('code');
 function babelCode(code) {
   let filesPath = [];
   const visitor = {
@@ -49,6 +49,8 @@ function babelCode(code) {
         !node.source.value.includes('umi') &&
         !node.source.value.includes('dva') &&
         !node.source.value.includes('nzh') &&
+        !node.source.value.includes('lodash-decorators') &&
+        !node.source.value.includes('ant-design-pro') &&
         !node.source.value.includes('utils/authority')
       ) {
         // 文件重名
@@ -96,7 +98,11 @@ function onFile(path, fileName, parentPath) {
       path = path1 + '.ts';
       fileName = fileName1 + '.ts';
       if (!fs.existsSync(path)) {
-        throw `异常：${parentPath} 引用的 ${path} 文件不存在`;
+        path = path1 + '.tsx';
+        fileName = fileName1 + '.tsx';
+        if (!fs.existsSync(path)) {
+          throw `异常：${parentPath} 引用的 ${path} 文件不存在`;
+        }
       }
     }
   }
@@ -167,4 +173,4 @@ function onFile(path, fileName, parentPath) {
       });
   });
 }
-onFile('./InfoSupplier.js', './code/index.js', './InfoSupplier.js');
+onFile('./ProductDetailt.tsx', './code/index.js', './ProductDetailt.tsx');
